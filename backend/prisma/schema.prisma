@@ -101,17 +101,35 @@ model Delivery {
   pickupReference  String?
   dropoffReference String?
 
+  recipientName      String?
+  recipientPhone     String?
+  packageDescription String?
+  distanceKm         Decimal @default(1) @db.Decimal(8, 2)
+
   totalAmount Decimal        @db.Decimal(10, 2)
   status      DeliveryStatus @default(PENDING)
 
   customer CustomerProfile @relation(fields: [customerId], references: [id])
   courier  CourierProfile? @relation(fields: [courierId], references: [id])
+  events   DeliveryEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([customerId])
   @@index([courierId, status])
+}
+
+model DeliveryEvent {
+  id         String         @id @default(uuid())
+  deliveryId String
+  status     DeliveryStatus
+  note       String?
+  actorId    String?
+  createdAt  DateTime       @default(now())
+  delivery   Delivery       @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId, createdAt])
 }
 
 // =====================================

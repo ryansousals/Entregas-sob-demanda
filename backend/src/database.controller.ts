@@ -1,19 +1,17 @@
-
 import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 
 @Controller('health')
 export class DatabaseController {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    @Get('database')
-    async checkDatabase() {
-        const totalUsers = await this.prisma.user.count();
+  @Get('database')
+  async checkDatabase() {
+    await this.prisma.$queryRaw`SELECT 1`;
 
-        return {
-            status: 'connected',
-            database: 'PostgreSQL',
-            totalUsers,
-        };
-    }
+    return {
+      status: 'connected',
+      database: 'PostgreSQL',
+    };
+  }
 }
