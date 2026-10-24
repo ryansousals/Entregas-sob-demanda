@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================
+// ENUMS
+// =====================================
+
+enum UserRole {
+  CUSTOMER
+  COURIER
+  ADMIN
+}
+
+enum DeliveryStatus {
+  PENDING
+  SEARCHING
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+// =====================================
+// USUÁRIOS
+// =====================================
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         UserRole @default(CUSTOMER)
+
+  customerProfile CustomerProfile?
+  courierProfile  CourierProfile?
+
+  // Turnos abertos e fechados pelo administrador
+  shiftsOpened CourierShift[] @relation("ShiftOpenedBy")
+  shiftsClosed CourierShift[] @relation("ShiftClosedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =====================================
+// CLIENTES
+// =====================================
+
+model CustomerProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user       User       @relation(fields: [userId], references: [id])
+  deliveries Delivery[]
+
+  createdAt DateTime @default(now())
+}
+
+// =====================================
+// ENTREGADORES (SOMENTE MOTOCICLETAS)
+// =====================================
+
+model CourierProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // Aprovação do cadastro pelo administrador
+  isApproved Boolean @default(false)
+
+  // Disponibilidade controlada pelo administrador
+  isAvailable Boolean @default(false)
+
+  user       User           @relation(fields: [userId], references: [id])
+  deliveries Delivery[]
+  shifts     CourierShift[]
+
+  createdAt DateTime @default(now())
+}
+
+// =====================================
+// ENTREGAS
+// =====================================
+
+model Delivery {
+  id String @id @default(uuid())
+
+  customerId String
+  courierId  String?
+
+  pickupAddress  String
+  dropoffAddress String
+
+  pickupReference  String?
+  dropoffReference String?
+
+  totalAmount Decimal        @db.Decimal(10, 2)
+  status      DeliveryStatus @default(PENDING)
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id])
+  courier  CourierProfile? @relation(fields: [courierId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([courierId, status])
+}
+
+// =====================================
+// TURNOS DOS MOTOBOYS
+// =====================================
+
+model CourierShift {
+  id String @id @default(uuid())
+
+  // Motoboy responsável pelo turno
+  courierId String
+
+  // Administrador que abriu o turno
+  openedById String
+
+  // Administrador que encerrou o turno
+  closedById String?
+
+  // Horários de entrada e saída
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  // Relacionamento com o motoboy
+  courier CourierProfile @relation(fields: [courierId], references: [id])
+
+  // Relacionamento com quem abriu o turno
+  openedBy User @relation("ShiftOpenedBy", fields: [openedById], references: [id])
+
+  // Relacionamento com quem fechou o turno
+  closedBy User? @relation("ShiftClosedBy", fields: [closedById], references: [id])
+
+  @@index([courierId, closedAt])
+}
