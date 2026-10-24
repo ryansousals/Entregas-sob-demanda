@@ -1,4 +1,4 @@
-# Administração dos motoboys — Etapa 11
+# Administração dos motoboys
 
 O administrador pode consultar solicitações pendentes e aprovar o cadastro de um
 motoboy. A aprovação muda o papel do usuário de `CUSTOMER` para `COURIER` e define
@@ -95,9 +95,9 @@ $pendentes = Invoke-RestMethod `
 $pendentes | ConvertTo-Json -Depth 4
 ```
 
-Uma lista vazia `[]` é válida quando não há perfis pendentes. Esta etapa usa
-os perfis `CourierProfile` já existentes; o repositório ainda não possui uma
-rota para solicitar o cadastro de motoboy.
+Uma lista vazia `[]` é válida quando não há perfis pendentes. Clientes podem
+solicitar cadastro em **Ser motoboy** na interface, ou com `POST /couriers/apply`
+usando seu token. A conta permanece como cliente até a aprovação.
 
 Quando houver um perfil pendente, copie o `id` dele e execute:
 
@@ -148,5 +148,23 @@ banco, incluindo duas aprovações simultâneas do mesmo perfil: uma retorna `20
 e a outra `409`. Os testes do script verificam a validação das credenciais e
 que contas existentes não são promovidas ou alteradas.
 
-A abertura e o fechamento de turnos, com histórico e bloqueio de turnos
-duplicados, ficam para a próxima etapa.
+## Turnos e operação
+
+Na interface administrativa, abra **Motoboys** para aprovar candidatos e abrir
+ou fechar o expediente. **Turnos** apresenta os horários e o responsável por
+cada operação. Um motoboy só pode aceitar pedidos quando estiver aprovado e com
+turno aberto. O encerramento é bloqueado enquanto houver entrega em andamento.
+
+| Método  | Rota                               | Uso                                                            |
+| ------- | ---------------------------------- | -------------------------------------------------------------- |
+| `GET`   | `/admin/summary`                   | Indicadores da operação                                        |
+| `GET`   | `/admin/couriers`                  | Motoboys, disponibilidade e turnos                             |
+| `POST`  | `/admin/couriers/:id/shifts/open`  | Abrir expediente                                               |
+| `POST`  | `/admin/couriers/:id/shifts/close` | Encerrar expediente                                            |
+| `GET`   | `/admin/shifts`                    | Histórico de turnos                                            |
+| `GET`   | `/admin/users`                     | Contas cadastradas                                             |
+| `GET`   | `/deliveries`                      | Pedidos da operação                                            |
+| `PATCH` | `/deliveries/:id/assign`           | Atribuir pedido, com corpo `{ "courierId": "UUID do perfil" }` |
+
+O [guia principal](../../README.md) descreve a instalação local e o fluxo completo
+entre administrador, cliente e motoboy.

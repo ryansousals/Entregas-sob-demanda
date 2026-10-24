@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
@@ -8,6 +7,8 @@ import { DatabaseController } from './database.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { CouriersModule } from './couriers/couriers.module';
+import { DeliveriesModule } from './deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -17,11 +18,10 @@ import { AdminModule } from './admin/admin.module';
     PrismaModule,
     AuthModule,
     AdminModule,
+    CouriersModule,
+    DeliveriesModule,
   ],
-  controllers: [
-    AppController,
-    DatabaseController,
-  ],
+  controllers: [AppController, DatabaseController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

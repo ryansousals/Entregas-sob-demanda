@@ -1,0 +1,22 @@
+{
+  "name": "entregaja-local",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sistema local de entregas sob demanda",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "local:init": "node scripts/local.mjs init",
+    "local:start": "node scripts/local.mjs start",
+    "local:stop": "node scripts/local.mjs stop",
+    "local:logs": "node scripts/local.mjs logs",
+    "local:status": "node scripts/local.mjs status",
+    "setup": "node scripts/local.mjs setup",
+    "dev": "node scripts/local.mjs dev",
+    "build": "node scripts/local.mjs build",
+    "test": "node scripts/local.mjs test",
+    "test:e2e": "node scripts/local.mjs test:e2e",
+    "local:shell": "node scripts/local.mjs shell"
+  }
+}

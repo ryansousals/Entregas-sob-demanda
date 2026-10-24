@@ -7,6 +7,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "admin:create": "node scripts/create-admin.cjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node scripts/seed-demo.cjs",
+    "test:scripts": "node --test scripts/create-admin.test.cjs",
     "build": "nest build",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -28,11 +32,18 @@
     "@nestjs/jwt": "^12.0.3",
     "@nestjs/platform-express": "^12.0.1",
     "@prisma/client": "^6.19.3",
+    "prisma": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
+  },
+  "overrides": {
+    "multer": "^2.5.0",
+    "@prisma/config": {
+      "deepmerge-ts": "^8.0.2"
+    }
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
@@ -47,7 +58,6 @@
     "oxlint": "^1.58.0",
     "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.4.2",
-    "prisma": "^6.19.3",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.4.0",

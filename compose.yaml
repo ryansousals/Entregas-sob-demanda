@@ -1,22 +1,87 @@
+name: entregaja
 
 services:
   db:
-    image: postgres:17
-    container_name: entregaja-postgres
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?Execute npm run local:init}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Execute npm run local:init}
+      POSTGRES_DB: ${POSTGRES_DB:?Execute npm run local:init}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      secrets:
+        - proxy_ca
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL_DOCKER:?Execute npm run local:init}
+      JWT_SECRET: ${JWT_SECRET:?Execute npm run local:init}
+      SEED_DEMO: ${SEED_DEMO:-true}
+      DELIVERY_BASE_FEE: ${DELIVERY_BASE_FEE:-10}
+      DELIVERY_PER_KM: ${DELIVERY_PER_KM:-2}
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health/database').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 45s
+      retries: 20
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE:-true}
+      secrets:
+        - proxy_ca
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-Y",
+          "off",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1/",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
   postgres_data:
+
+secrets:
+  proxy_ca:
+    file: ${CODEX_PROXY_CERT:-./scripts/empty-ca.pem}
